@@ -6,4 +6,5 @@
   :dependencies [[org.clojure/clojure "1.5.1"]
                  [ring/ring-core "1.2.0"]
                  [com.cemerick/friend "0.1.5"]
+                 [clj-time "0.5.1"]
                  [cheshire "5.2.0"]])

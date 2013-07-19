@@ -70,6 +70,9 @@
             signature (encode key message)]
         (= token-signature (seq signature))))))
 
+(defn from-request
+  [request token-header]
+  ((:headers request) (.toLowerCase token-header)))
 
 
 

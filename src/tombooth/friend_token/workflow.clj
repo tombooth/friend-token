@@ -1,6 +1,8 @@
 (ns tombooth.friend-token.workflow
   (:require [cemerick.friend :as friend]
             [cemerick.friend.workflows :as workflows]
+            [tombooth.friend-token.token-store :as store]
+            [tombooth.friend-token.token :as token]
             [ring.util.request :as req]
             [clojure.tools.logging :as logging]
             [cheshire.core :as json])
@@ -18,7 +20,7 @@
        (= :post (:request-method request))))
 
 (defn- authenticate
-  [{:keys [credential-fn create-token-fn token-header] :as config} request]
+  [{:keys [credential-fn token-store token-header] :as config} request]
   ; we expect a json body with :username and :password
   (if-let [body (:body request)]
     (let [{:keys [username password] :as creds} (json/parse-string (slurp body) true)]
@@ -26,7 +28,7 @@
       (if-let [user-record (and username password
                                (credential-fn (with-meta creds {::friend/workflow :token})))]
 
-        (let [session-token (create-token-fn user-record)]
+        (let [session-token (store/create token-store user-record)]
           (workflows/make-auth user-record
             {::friend/workflow :token
              ::friend/redirect-on-auth? false})
@@ -37,9 +39,9 @@
     {:status 400 :headers {"Content-Type" "text/plain"}}))
 
 (defn- read-token
-  [{:keys [token-header verify-token-fn] :as config} {:keys [headers] :as request}]
-  (if-let [session-token (headers (.toLowerCase token-header))]
-    (if-let [user-record (verify-token-fn session-token)]
+  [{:keys [token-header token-store get-user-fn] :as config} request]
+  (if-let [session-token (token/from-request request token-header)]
+    (if-let [user-record (get-user-fn (store/verify token-store session-token))]
       (workflows/make-auth user-record
         {::friend/workflow :token
          ::friend/redirect-on-auth? false}))))
