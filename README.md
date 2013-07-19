@@ -18,32 +18,32 @@ A token workflow for apis using the Friend middleware for authentication
             [cemerick.friend :as friend]
             (cemerick.friend [credentials :as creds])
             [tombooth.friend-token.workflow :as token-workflow]
+            [tombooth.friend-token.token-store :as store]
             [tombooth.friend-token.token :as token]))
 
 (def users {"friend" {:username "friend"
                       :password (creds/hash-bcrypt "clojure")
                       :roles #{::user}}})
 
-(def tokens (atom {}))
-
 (defonce secret-key (token/generate-key))
+
+(def token-header "X-Auth-Token")
+(def token-store
+  (store/->MemTokenStore secret-key 30 (atom {})))
 
 (defroutes app-routes
   (GET "/" [] (friend/authenticated "Authenticated Hello!!"))
   (GET "/un" [] "Unauthenticated Hello")
+  (GET "/extend-token" [:as request]
+    (if-let [token-hex (token/from-request request token-header)]
+      (store/extend-life token-store token-hex)
+      {:status 401}))
+  (GET "/destroy-token" [:as request]
+    (if-let [token-hex (token/from-request request token-header)]
+      (store/destroy token-store token-hex)
+      {:status 401}))
   (route/resources "/")
   (route/not-found "Not Found"))
-
-(defn create-token [user-record]
-  (let [id (:username user-record)
-        token (token/create-token secret-key id)]
-    (swap! tokens assoc token id)
-    token))
-
-(defn verify-token [token]
-  (if-let [id (@tokens token)]
-    (if (token/verify-token secret-key token id)
-      (users id))))
 
 (def secured-app (friend/authenticate
                    app-routes
@@ -51,10 +51,10 @@ A token workflow for apis using the Friend middleware for authentication
                     :unauthenticated-handler #(token-workflow/token-deny %)
                     :login-uri "/authenticate"
                     :workflows [(token-workflow/token
-                                  :token-header "X-Auth-Token"
+                                  :token-header token-header
                                   :credential-fn (partial creds/bcrypt-credential-fn users)
-                                  :create-token-fn create-token
-                                  :verify-token-fn verify-token )]}))
+                                  :token-store token-store
+                                  :get-user-fn users )]}))
 
 (def app
   (handler/api secured-app))
@@ -62,6 +62,6 @@ A token workflow for apis using the Friend middleware for authentication
 
 ## License
 
-Copyright © 2013 FIXME
+Copyright © 2013 Thomas Booth
 
 Distributed under the Eclipse Public License, the same as Clojure.
