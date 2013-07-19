@@ -10,20 +10,20 @@
       (store/create token-store {:username "foo"})
       (is (= 1 (count (keys @tokens)))))))
 
-(deftest valid-test
-  (testing "Test valid if token is good and inside ttl"
+(deftest get-metadata-test
+  (testing "Test we can get metadata"
     (let [tokens (atom {})
           token-store (store/->MemTokenStore (token/generate-key) 10 tokens)
           token-hex (store/create token-store {:username "foo"})]
-      (is (store/valid-token? token-store token-hex)))))
+      (is (store/get-metadata token-store token-hex)))))
 
 (deftest valid-fail-ttl-test
-  (testing "Test valid if token is good but outside ttl"
+  (testing "Test getting metadata fails if outside ttl"
     (let [tokens (atom {})
           token-store (store/->MemTokenStore (token/generate-key) 1 tokens)
           token-hex (store/create token-store {:username "foo"})]
       (Thread/sleep 2000)
-      (is (not (store/valid-token? token-store token-hex))))))
+      (is (not (store/get-metadata token-store token-hex))))))
 
 (deftest valid-extend-test
   (testing "Test extend works"
@@ -33,7 +33,7 @@
       (Thread/sleep 1000)
       (store/extend-life token-store token-hex)
       (Thread/sleep 1500)
-      (is (store/valid-token? token-store token-hex)))))
+      (is (store/get-metadata token-store token-hex)))))
 
 (deftest destroy-test
   (testing "Test destroying a token"

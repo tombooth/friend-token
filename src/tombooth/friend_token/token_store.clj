@@ -4,7 +4,7 @@
 
 (defprotocol TokenStore
   (create [instance user])
-  (valid-token? [instance token-hex])
+  (get-metadata [instance token-hex])
   (verify [instance token-hex])
   (extend-life [instance token-hex])
   (destroy [instance token-hex]))
@@ -28,22 +28,23 @@
       })
       token-hex))
 
-  (valid-token? [this token-hex]
+  (get-metadata [this token-hex]
     (if-let [token-data (@tokens token-hex)]
       (let [id (:id token-data)]
-        (and (token/verify-token key token-hex id)
-             (within-ttl? token-data ttl)))))
+        (if (and (token/verify-token key token-hex id)
+             (within-ttl? token-data ttl))
+          token-data))))
 
   (verify [this token-hex]
-    (if (valid-token? this token-hex)
-      (:id (@tokens token-hex))
+    (if-let [token-data (get-metadata this token-hex)]
+      (:id token-data)
       (destroy this token-hex)))
 
   (extend-life [this token-hex]
-    (if (valid-token? this token-hex)
-      (let [token-data (@tokens token-hex)
-            new-token-data (assoc token-data :created (time/now))]
-        (swap! tokens assoc token-hex new-token-data))))
+    (if-let [token-data (get-metadata this token-hex)]
+      (let [new-token-data (assoc token-data :created (time/now))]
+        (swap! tokens assoc token-hex new-token-data))
+      (destroy this token-hex)))
 
   (destroy [this token-hex]
     (swap! tokens dissoc token-hex)))
