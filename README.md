@@ -36,11 +36,11 @@ A token workflow for apis using the Friend middleware for authentication
   (GET "/un" [] "Unauthenticated Hello")
   (POST "/extend-token" [:as request]
     (if-let [token-hex (token/from-request request token-header)]
-      (store/extend-life token-store token-hex)
+      (do (store/extend-life token-store token-hex) {:status 200})
       {:status 401}))
   (POST "/destroy-token" [:as request]
     (if-let [token-hex (token/from-request request token-header)]
-      (store/destroy token-store token-hex)
+      (do (store/destroy token-store token-hex) {:status 200})
       {:status 401}))
   (route/resources "/")
   (route/not-found "Not Found"))
