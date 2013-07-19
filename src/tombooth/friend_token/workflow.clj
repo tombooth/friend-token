@@ -8,6 +8,10 @@
             [cheshire.core :as json])
   (:use [cemerick.friend.util :only (gets)]))
 
+(defn generate-key
+  ([] (generate-key 128))
+  ([size] (token/random-bytes size)))
+
 (defn token-deny
   [& foo]
   {:status 401
@@ -26,12 +30,14 @@
     (let [{:keys [username password] :as creds} (json/parse-string (slurp body) true)]
       ;check to see if the credentials are valid
       (if-let [user-record (and username password
-                               (credential-fn (with-meta creds {::friend/workflow :token})))]
+                               (credential-fn (with-meta creds {::friend/workflow ::token})))]
 
         (let [session-token (store/create token-store user-record)]
           (workflows/make-auth user-record
-            {::friend/workflow :token
-             ::friend/redirect-on-auth? false})
+            {::friend/workflow ::token
+             ::friend/redirect-on-auth? false
+             ::token-hex session-token
+             ::token-store token-store})
           {:status 200 :headers {token-header session-token}})
 
         (token-deny)))
@@ -43,8 +49,10 @@
   (if-let [session-token (token/from-request request token-header)]
     (if-let [user-record (get-user-fn (store/verify token-store session-token))]
       (workflows/make-auth user-record
-        {::friend/workflow :token
-         ::friend/redirect-on-auth? false}))))
+        {::friend/workflow ::token
+         ::friend/redirect-on-auth? false
+         ::token-hex session-token
+         ::token-store token-store}))))
 
 (defn token
   [& {:as config}]
@@ -55,4 +63,19 @@
       (read-token config request))))
 
 
+(defmacro extend-life
+  [& body]
+  `(if-let [auth-map# (friend/current-authentication)]
+     (let [auth-meta# (meta auth-map#)
+           token-hex# (::token-hex auth-meta#)
+           token-store# (::token-store auth-meta#)]
+       (store/extend-life token-store# token-hex#))))
+
+(defmacro destroy
+  [& body]
+  `(if-let [auth-map# (friend/current-authentication)]
+     (let [auth-meta# (meta auth-map#)
+           token-hex# (::token-hex auth-meta#)
+           token-store# (::token-store auth-meta#)]
+       (store/destroy token-store# token-hex#))))
 

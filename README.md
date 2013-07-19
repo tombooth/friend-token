@@ -1,6 +1,6 @@
 # tombooth/friend-token
 
-A token workflow for apis using the Friend middleware for authentication
+A token workflow for apis using the Friend middleware for authentication.
 
 ## Usage
 
@@ -18,16 +18,14 @@ A token workflow for apis using the Friend middleware for authentication
             [cemerick.friend :as friend]
             (cemerick.friend [credentials :as creds])
             [tombooth.friend-token.workflow :as token-workflow]
-            [tombooth.friend-token.token-store :as store]
-            [tombooth.friend-token.token :as token]))
+            [tombooth.friend-token.token-store :as store]))
 
 (def users {"friend" {:username "friend"
                       :password (creds/hash-bcrypt "clojure")
                       :roles #{::user}}})
 
-(defonce secret-key (token/generate-key))
+(defonce secret-key (token-workflow/generate-key))
 
-(def token-header "X-Auth-Token")
 (def token-store
   (store/->MemTokenStore secret-key 30 (atom {})))
 
@@ -35,13 +33,13 @@ A token workflow for apis using the Friend middleware for authentication
   (GET "/" [] (friend/authenticated "Authenticated Hello!!"))
   (GET "/un" [] "Unauthenticated Hello")
   (POST "/extend-token" [:as request]
-    (if-let [token-hex (token/from-request request token-header)]
-      (do (store/extend-life token-store token-hex) {:status 200})
-      {:status 401}))
+    (friend/authenticated
+      (token-workflow/extend-life
+        {:status 200 :headers {}})))
   (POST "/destroy-token" [:as request]
-    (if-let [token-hex (token/from-request request token-header)]
-      (do (store/destroy token-store token-hex) {:status 200})
-      {:status 401}))
+    (friend/authenticated
+      (token-workflow/destroy
+        {:status 200 :headers {}})))
   (route/resources "/")
   (route/not-found "Not Found"))
 
@@ -51,7 +49,7 @@ A token workflow for apis using the Friend middleware for authentication
                     :unauthenticated-handler #(token-workflow/token-deny %)
                     :login-uri "/authenticate"
                     :workflows [(token-workflow/token
-                                  :token-header token-header
+                                  :token-header "X-Auth-Token"
                                   :credential-fn (partial creds/bcrypt-credential-fn users)
                                   :token-store token-store
                                   :get-user-fn users )]}))

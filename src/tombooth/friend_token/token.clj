@@ -18,7 +18,7 @@
                 (Character/digit c2 16))))]
     (map #(apply unhexify-2 %) (partition 2 s))))
 
-(defn- random-bytes
+(defn random-bytes
   [length]
   (let [gen (new SecureRandom) key (byte-array length)]
     (.nextBytes gen key)
@@ -43,10 +43,6 @@
         secret-key (SecretKeySpec. key "HmacSHA256")]
     (.init hmac secret-key)
     (.doFinal hmac data)))
-
-(defn generate-key
-  ([] (generate-key 128))
-  ([size] (random-bytes size)))
 
 (defn create-token
   [key id]
