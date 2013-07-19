@@ -1,4 +1,4 @@
-(ns tombooth.friend-token.workflow
+(ns tombooth.friend-token
   (:require [cemerick.friend :as friend]
             [cemerick.friend.workflows :as workflows]
             [tombooth.friend-token.token-store :as store]
@@ -12,7 +12,7 @@
   ([] (generate-key 128))
   ([size] (token/random-bytes size)))
 
-(defn token-deny
+(defn workflow-deny
   [& foo]
   {:status 401
    :headers {"Content-Type" "text/plain"}})
@@ -40,7 +40,7 @@
              ::token-store token-store})
           {:status 200 :headers {token-header session-token}})
 
-        (token-deny)))
+        (workflow-deny)))
 
     {:status 400 :headers {"Content-Type" "text/plain"}}))
 
@@ -54,7 +54,7 @@
          ::token-hex session-token
          ::token-store token-store}))))
 
-(defn token
+(defn workflow
   [& {:as config}]
   (fn [request]
     (if
