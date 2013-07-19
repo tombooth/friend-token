@@ -34,11 +34,11 @@ A token workflow for apis using the Friend middleware for authentication
 (defroutes app-routes
   (GET "/" [] (friend/authenticated "Authenticated Hello!!"))
   (GET "/un" [] "Unauthenticated Hello")
-  (GET "/extend-token" [:as request]
+  (POST "/extend-token" [:as request]
     (if-let [token-hex (token/from-request request token-header)]
       (store/extend-life token-store token-hex)
       {:status 401}))
-  (GET "/destroy-token" [:as request]
+  (POST "/destroy-token" [:as request]
     (if-let [token-hex (token/from-request request token-header)]
       (store/destroy token-store token-hex)
       {:status 401}))
