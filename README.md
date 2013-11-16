@@ -5,7 +5,7 @@ A token workflow for apis using the Friend middleware for authentication.
 ## Usage
 
 ```clojure
-[com.tombooth/friend-token "0.1.0-SNAPSHOT"]
+[com.tombooth/friend-token "0.1.1-SNAPSHOT"]
 ```
 
 ## Example compojure app
@@ -16,7 +16,7 @@ A token workflow for apis using the Friend middleware for authentication.
   (:require [compojure.handler :as handler]
             [compojure.route :as route]
             [cemerick.friend :as friend]
-            (cemerick.friend [credentials :as creds])
+            [cemerick.friend [credentials :as creds]]
             [tombooth.friend-token :as friend-token]
             [tombooth.friend-token.token-store :as store]))
 
