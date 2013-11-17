@@ -26,8 +26,11 @@ A token workflow for apis using the Friend middleware for authentication.
 
 (defonce secret-key (friend-token/generate-key))
 
+
 (def token-store
-  (store/->MemTokenStore secret-key 30 (atom {})))
+  (store/->MemTokenStore secret-key     ;; Key used to sign tokens
+                         30             ;; TTL of tokens in seconds
+                         (atom {})))    ;; Hash to store tokens -> users
 
 (defroutes app-routes
   (GET "/" [] (friend/authenticated "Authenticated Hello!!"))
