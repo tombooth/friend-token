@@ -63,10 +63,15 @@ A token workflow for apis using the Friend middleware for authentication.
   (handler/api secured-app))
 ```
 
-### cURL Usage
+### Usage
+
+Examples below shown in cURL.
+
+#### Getting a token
+
 The `:login-uri` path expects a JSON POST response containing a `username` and `password` key:
 
-``` curl
+``` sh
 $ curl -X POST  -H "Content-type: application/json" -d '{"username": "friend", "password": "clojure"}' http://localhost:3000/authenticate -i
 
 HTTP/1.1 200 OK
@@ -77,9 +82,11 @@ Server: Jetty(7.6.13.v20130916)
 
 ```
 
+#### Using a token against secured resources
+
 You can then use the `X-Auth-Token` value to make subsequent requests to secured resources:
 
-``` curl
+``` sh
 $ curl -i 'http://localhost:3000' -H "Accept: application/json" -H "X-Auth-Token: 0000000000000006667269656e64000001479c39e403e6c7b7d7c7e95e72adae7f33b7e876fe683932b0f82a5e60f6cc18f912d697409139dc874491a89d8e58e39c8a9af160f43cd2e03ebb3269b403200d943c0d87"
 
 HTTP/1.1 200 OK
@@ -92,6 +99,35 @@ Server: Jetty(7.6.13.v20130916)
 Authenticated Hello!!⏎
 
 ```
+
+#### Extending a token
+
+``` sh
+$ curl -i http://localhost:3000/extend-token -X POST -H "X-Auth-Token: 0000000000000006667269656e64000001479c39e403e6c7b7d7c7e95e72adae7f33b7e876fe683932b0f82a5e60f6cc18f912d697409139dc874491a89d8e58e39c8a9af160f43cd2e03ebb3269b403200d943c0d87" 
+
+HTTP/1.1 200 OK
+Date: Sun, 03 Aug 2014 14:21:58 GMT
+Set-Cookie: ring-session=a0e05004-0371-4fed-85d8-7b07886aa77f;Path=/
+Content-Length: 0
+Server: Jetty(7.6.13.v20130916)
+
+```
+
+#### Destroying a token
+
+``` sh
+
+$ curl -i http://localhost:3000/destroy-token -X POST -H "X-Auth-Token: 0000000000000006667269656e64000001479c39e403e6c7b7d7c7e95e72adae7f33b7e876fe683932b0f82a5e60f6cc18f912d697409139dc874491a89d8e58e39c8a9af160f43cd2e03ebb3269b403200d943c0d87"
+
+HTTP/1.1 200 OK
+Date: Sun, 03 Aug 2014 14:25:10 GMT
+Set-Cookie: ring-session=a806c38c-17f0-4e3a-9e99-8be002c5eae4;Path=/
+Content-Length: 0
+Server: Jetty(7.6.13.v20130916)
+
+```
+
+Subsequent attempts to use the token will fail.
 
 ## License
 
