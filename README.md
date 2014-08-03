@@ -102,6 +102,8 @@ Authenticated Hello!!⏎
 
 #### Extending a token
 
+Tokens expire after the TTL set within the `:token-store` key. You can extend these as follows:
+
 ``` sh
 $ curl -i http://localhost:3000/extend-token -X POST -H "X-Auth-Token: 0000000000000006667269656e64000001479c39e403e6c7b7d7c7e95e72adae7f33b7e876fe683932b0f82a5e60f6cc18f912d697409139dc874491a89d8e58e39c8a9af160f43cd2e03ebb3269b403200d943c0d87" 
 
@@ -114,6 +116,8 @@ Server: Jetty(7.6.13.v20130916)
 ```
 
 #### Destroying a token
+
+You may want to kill a token (by removing it from your `:token-store`):
 
 ``` sh
 
