@@ -7,5 +7,5 @@
                  [org.clojure/tools.logging "0.2.6"]
                  [ring/ring-core "1.2.0"]
                  [com.cemerick/friend "0.1.5"]
-                 [clj-time "0.5.1"]
+                 [clj-time "0.6.0"]
                  [cheshire "5.2.0"]])
