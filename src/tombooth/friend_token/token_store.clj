@@ -11,7 +11,7 @@
 
 (defn- within-ttl?
   [token-data ttl]
-  (let [seconds-passed (time/in-secs (time/interval (:created token-data) (time/now)))]
+  (let [seconds-passed (time/in-seconds (time/interval (:created token-data) (time/now)))]
     (< seconds-passed ttl)))
 
 (defrecord MemTokenStore
